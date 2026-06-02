@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { IS_DEMO } from '../firebase/firebase.js';
 import WeekPicker from './WeekPicker.jsx';
+import AccountsPopover from './AccountsPopover.jsx';
 
 const links = [
   { to: '/', label: 'Översikt', end: true },
@@ -19,7 +20,7 @@ const links = [
 const linkClass = ({ isActive }) => 'tp-nav-link' + (isActive ? ' active' : '');
 
 export default function NavBar() {
-  const { profile, signOut } = useAuth();
+  const { profile, isCoordinator, signOut } = useAuth();
   const { mode, toggleMode } = useTheme();
 
   return (
@@ -48,6 +49,7 @@ export default function NavBar() {
 
       <div className="tp-navbar-right">
         <WeekPicker />
+        {isCoordinator && <AccountsPopover />}
         <button
           onClick={toggleMode}
           className="tp-icon-btn"

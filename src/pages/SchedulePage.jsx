@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { paths, subscribe, set, adjust, newId } from '../firebase/storage.js';
 import { defaultRotation } from '../utils/dataUtils.js';
 import { taskForGroup } from '../utils/rotation.js';
+import { pairKeyForGroup } from '../utils/keys.js';
 import GroupCard from '../components/GroupCard.jsx';
 
 export default function SchedulePage() {
@@ -55,6 +56,56 @@ export default function SchedulePage() {
     });
   }
 
+  // Pair existing groups in order (1+2, 3+4, 5+6 …) into rotating pairs and
+  // anchor the weekly rotation to the current week. If there are no groups yet,
+  // create the canonical six. An odd leftover group stays manual.
+  async function setupRotation() {
+    if (!confirm('Para ihop grupperna i ordning (1+2, 3+4, 5+6) och starta veckorotation?')) return;
+
+    let working = [...groups];
+    if (working.length === 0) {
+      const ids = Array.from({ length: 6 }, () => newId());
+      working = ids.map((id, i) => ({
+        id,
+        name: `Grupp ${i + 1}`,
+        order: i,
+        pairWith: ids[i % 2 === 0 ? i + 1 : i - 1],
+      }));
+      await Promise.all(
+        working.map((g) =>
+          set(paths.group(g.id), { name: g.name, order: g.order, rotating: true, pairWith: g.pairWith }),
+        ),
+      );
+    } else {
+      const writes = [];
+      for (let i = 0; i + 1 < working.length; i += 2) {
+        const a = working[i];
+        const b = working[i + 1];
+        writes.push(set(paths.group(a.id), { name: a.name, order: a.order ?? i, rotating: true, pairWith: b.id }));
+        writes.push(set(paths.group(b.id), { name: b.name, order: b.order ?? i + 1, rotating: true, pairWith: a.id }));
+      }
+      await Promise.all(writes);
+      working = working.map((g, idx) => {
+        const partner = working[idx % 2 === 0 ? idx + 1 : idx - 1];
+        return partner ? { ...g, pairWith: partner.id } : g;
+      });
+    }
+
+    const pairKeys = [];
+    for (let i = 0; i + 1 < working.length; i += 2) {
+      pairKeys.push(pairKeyForGroup({ id: working[i].id, pairWith: working[i + 1].id }));
+    }
+    const base = defaultRotation(pairKeys); // base week = current, default slots + assignments
+    await set(paths.rotation(), {
+      ...base,
+      slots: rotation?.slots?.length ? rotation.slots : base.slots,
+      overrides: rotation?.overrides ?? {},
+      manualTasks: rotation?.manualTasks ?? {},
+    });
+  }
+
+  const hasRotating = groups.some((g) => g.rotating);
+
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
@@ -64,7 +115,18 @@ export default function SchedulePage() {
         )}
       </div>
 
-      {isCoordinator && <SlotLabelEditor rotation={rotation} />}
+      {isCoordinator && !hasRotating && (
+        <div className="tp-card" style={{ marginTop: '1rem', borderColor: 'var(--tp-primary)' }}>
+          <p style={{ margin: '0 0 0.5rem' }}>
+            <strong>Rotationen är inte uppsatt.</strong> Grupperna byter inte uppgift automatiskt förrän de paras ihop.
+          </p>
+          <button className="tp-btn" onClick={setupRotation}>
+            Para ihop grupperna (1+2, 3+4, 5+6) och starta veckorotation
+          </button>
+        </div>
+      )}
+
+      {isCoordinator && hasRotating && <SlotLabelEditor rotation={rotation} />}
 
       {groups.length === 0 ? (
         <p className="tp-muted">Inga grupper än.</p>
@@ -74,7 +136,7 @@ export default function SchedulePage() {
             <GroupCard
               key={group.id}
               group={group}
-              members={users.filter((u) => u.groupId === group.id && u.active !== false)}
+              members={users.filter((u) => u.groupId === group.id && u.active !== false && !u.system)}
               task={taskForGroup(group, year, weekNum, rotation, rotation.slots)}
               isCoordinator={isCoordinator}
               teams={teams}

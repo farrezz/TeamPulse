@@ -22,10 +22,14 @@ export default function WeekPicker() {
 
   const now = new Date();
   const thisYear = getISOYear(now);
+  const thisWeek = getWeekNumber(now);
   const years = [];
   for (let y = thisYear - 3; y <= thisYear + 3; y++) years.push(y);
   const maxWeek = weeksInISOYear(year);
   const weeks = Array.from({ length: maxWeek }, (_, i) => i + 1);
+
+  // The actual current ISO week (only "nu" when viewing the current year).
+  const isCurrentWeek = (w) => year === thisYear && w === thisWeek;
 
   return (
     <div
@@ -49,7 +53,7 @@ export default function WeekPicker() {
         >
           {weeks.map((w) => (
             <option key={w} value={w}>
-              {w}
+              {w}{isCurrentWeek(w) ? ' (nu)' : ''}
             </option>
           ))}
         </select>

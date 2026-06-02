@@ -35,10 +35,6 @@ service cloud.firestore {
         return hasProfile() && userData().role == 'coordinator';
       }
 
-      function ownsTeam(teamId) {
-        return hasProfile() && userData().teamId == teamId;
-      }
-
       // A per-day count array: length 5 (Mån–Fre), non-negative integers.
       function validDayArray(a) {
         return a is list && a.size() == 5
@@ -74,10 +70,11 @@ service cloud.firestore {
 
         match /weeks/{weekId} {
           allow read: if isSignedIn();
-          // A member may write their own team's counter; a coordinator any team.
-          // Members are constrained to a valid non-negative counter shape.
+          // Plan A: members share one login, so "own team" can't be derived.
+          // Any signed-in member may write any team's counter (constrained to a
+          // valid non-negative counter shape); coordinators are unconstrained.
           allow write: if isCoordinator()
-            || (ownsTeam(teamId) && validCounter(request.resource.data));
+            || (hasProfile() && validCounter(request.resource.data));
         }
       }
 

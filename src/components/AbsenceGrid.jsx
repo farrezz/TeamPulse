@@ -10,8 +10,8 @@ import { absenceKey } from '../utils/keys.js';
 
 const DAYS = ['Mån', 'Tis', 'Ons', 'Tor', 'Fre'];
 export const TYPE_COLORS = {
-  semester: 'var(--tp-accent)',
-  ovrig: 'var(--tp-danger)',
+  semester: 'var(--tp-danger)',
+  ovrig: 'var(--tp-textMuted)',
 };
 const TYPE_LABELS = { semester: 'Semester', ovrig: 'Övrig' };
 
@@ -69,14 +69,16 @@ function AbsenceCell({ year, weekNum, uid, dayIndex, entry }) {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 78 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 56 }}>
       <select
         value={entry?.type ?? ''}
         onChange={changeType}
         style={{
           background: entry ? TYPE_COLORS[entry.type] : 'transparent',
-          color: entry ? 'var(--tp-primaryText)' : 'inherit',
+          color: entry ? '#ffffff' : 'inherit',
           borderRadius: 4,
+          padding: '0.15rem 0.2rem',
+          fontSize: '0.75rem',
         }}
       >
         <option value="">—</option>

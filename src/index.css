@@ -25,6 +25,39 @@ button {
   cursor: pointer;
 }
 
+/* Form controls — use the on-palette input token so dark mode doesn't fall
+   back to the harsh near-black native control colour. */
+input,
+select,
+textarea {
+  font: inherit;
+  color: var(--tp-text);
+  background-color: var(--tp-input);
+  border: 1px solid var(--tp-border);
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--tp-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--tp-textMuted);
+}
+
+/* Native pickers (date/color/range) keep their themed chrome via color-scheme,
+   but their face matches the rest. */
+input[type='range'] {
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
 .tp-card {
   background: var(--tp-surface);
   border: 1px solid var(--tp-border);

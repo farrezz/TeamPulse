@@ -16,7 +16,11 @@ export default function AbsencePage() {
 
   useEffect(() => {
     const unsub = subscribe(paths.users(), (list) =>
-      setUsers(list.filter((u) => u.active !== false).sort((a, b) => a.name.localeCompare(b.name, 'sv'))),
+      setUsers(
+        list
+          .filter((u) => u.active !== false && !u.system)
+          .sort((a, b) => a.name.localeCompare(b.name, 'sv')),
+      ),
     );
     return () => unsub();
   }, []);

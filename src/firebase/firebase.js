@@ -15,7 +15,7 @@ import { getStorage } from 'firebase/storage';
 // True when Firebase isn't configured — drive the in-memory demo backend.
 export const IS_DEMO = !import.meta.env.VITE_FIREBASE_API_KEY;
 
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'teampulse-demo',

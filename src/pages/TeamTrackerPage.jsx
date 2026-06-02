@@ -34,7 +34,9 @@ export default function TeamTrackerPage() {
     teams[0].id;
   const selected = teams.find((t) => t.id === selectedId);
   const week = weekByTeam[selectedId] ?? makeEmptyWeek();
-  const canEdit = isCoordinator || profile?.teamId === selectedId;
+  // Plan A: any signed-in member may +/- any team's counter. Typing an exact
+  // value stays coordinator-only.
+  const canEdit = true;
 
   return (
     <>
