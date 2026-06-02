@@ -36,7 +36,7 @@ export default function WeekPicker() {
         flexWrap: 'wrap',
       }}
     >
-      <button className="tp-btn" onClick={() => step(-1)} aria-label="Föregående vecka">
+      <button className="tp-icon-btn" onClick={() => step(-1)} aria-label="Föregående vecka">
         ←
       </button>
 
@@ -70,7 +70,7 @@ export default function WeekPicker() {
         ))}
       </select>
 
-      <button className="tp-btn" onClick={() => step(1)} aria-label="Nästa vecka">
+      <button className="tp-icon-btn" onClick={() => step(1)} aria-label="Nästa vecka">
         →
       </button>
     </div>

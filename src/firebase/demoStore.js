@@ -7,7 +7,7 @@
 
 import { DEPARTMENT_ID } from './firebase.js';
 import { weekKey, pairKeyForGroup } from '../utils/keys.js';
-import { currentWeek, defaultRotation, defaultAppearance } from '../utils/dataUtils.js';
+import { currentWeek, defaultRotation } from '../utils/dataUtils.js';
 
 const store = new Map(); // path -> data object
 const listeners = new Map(); // path -> Set<{ type, cb, fallback }>
@@ -112,10 +112,11 @@ function seed() {
     store.set(`${DEPT}/teams/${t.id}`, { name: t.name, order: t.order, createdAt: null }),
   );
 
-  // Current-week counters — sums to 18 Beredningar (so the goal reads "18 av 25").
-  store.set(`${DEPT}/teams/t1/weeks/${WK}`, { Beredningar: 12, Beslut: 8 });
-  store.set(`${DEPT}/teams/t2/weeks/${WK}`, { Beredningar: 5, Beslut: 3 });
-  store.set(`${DEPT}/teams/t3/weeks/${WK}`, { Beredningar: 1, Beslut: 0 });
+  // Current-week counters — per-day arrays [Mån..Fre]. Beredningar sums to 18
+  // across teams (so the department goal reads "18 av 25").
+  store.set(`${DEPT}/teams/t1/weeks/${WK}`, { Beredningar: [8, 4, 0, 0, 0], Beslut: [5, 3, 0, 0, 0] });
+  store.set(`${DEPT}/teams/t2/weeks/${WK}`, { Beredningar: [3, 2, 0, 0, 0], Beslut: [2, 1, 0, 0, 0] });
+  store.set(`${DEPT}/teams/t3/weeks/${WK}`, { Beredningar: [1, 0, 0, 0, 0], Beslut: [0, 0, 0, 0, 0] });
 
   store.set(`${DEPT}/goals/${WK}`, { Beredningar: 25 });
 
@@ -127,7 +128,6 @@ function seed() {
     { id: 'g4', name: 'Grupp 4', order: 3, rotating: true, pairWith: 'g3' },
     { id: 'g5', name: 'Grupp 5', order: 4, rotating: true, pairWith: 'g6' },
     { id: 'g6', name: 'Grupp 6', order: 5, rotating: true, pairWith: 'g5' },
-    { id: 'gm1', name: 'Reception', order: 6, rotating: false, pairWith: null },
   ];
   groups.forEach((g) =>
     store.set(`${DEPT}/groups/${g.id}`, {
@@ -145,7 +145,7 @@ function seed() {
     { id: 'u4', name: 'Cecilia Carlsson', role: 'member', teamId: 't2', groupId: 'g4', active: true },
     { id: 'u5', name: 'David Dahl', role: 'member', teamId: 't3', groupId: 'g5', active: true },
     { id: 'u6', name: 'Eva Ek', role: 'member', teamId: 't3', groupId: 'g6', active: true },
-    { id: 'u7', name: 'Frida Falk', role: 'member', teamId: 't1', groupId: 'gm1', active: true },
+    { id: 'u7', name: 'Frida Falk', role: 'member', teamId: 't1', groupId: 'g1', active: true },
   ];
   users.forEach(({ id, ...data }) => store.set(`${DEPT}/users/${id}`, data));
 
@@ -156,12 +156,6 @@ function seed() {
     pairKeyForGroup({ id: 'g5', pairWith: 'g6' }),
   ];
   store.set(`${DEPT}/config/rotation`, defaultRotation(pairKeys));
-
-  // A manual-group task for the current week, so the schedule isn't all "—".
-  const rotation = store.get(`${DEPT}/config/rotation`);
-  rotation.manualTasks = { [WK]: { gm1: 'Reception + telefon' } };
-
-  store.set(`${DEPT}/config/appearance`, defaultAppearance());
 
   // A couple of pre-filled absence cells for the current week.
   store.set(`${DEPT}/absence/${WK}`, {

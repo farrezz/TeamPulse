@@ -4,9 +4,26 @@
 import { weekKey } from './keys.js';
 import { getWeekNumber, getISOYear } from './dateUtils.js';
 
-/** A blank team week-counter document. */
+// Case counts are tracked per weekday (Mån–Fre). Each category is a length-5
+// array of non-negative ints; index 0 = Måndag … 4 = Fredag. The weekly total
+// is the sum of the array.
+export const DAYS = ['Måndag', 'Tisdag', 'Onsdag', 'Torsdag', 'Fredag'];
+
+/** A blank team week-counter document (per-day arrays). */
 export function makeEmptyWeek() {
-  return { Beredningar: 0, Beslut: 0 };
+  return { Beredningar: [0, 0, 0, 0, 0], Beslut: [0, 0, 0, 0, 0] };
+}
+
+/** A length-5 day array, tolerating a missing/legacy scalar value. */
+export function dayArray(week, field) {
+  const v = week?.[field];
+  if (Array.isArray(v)) return v;
+  return [0, 0, 0, 0, 0];
+}
+
+/** Sum of a category's day array for the week. */
+export function weekTotal(week, field) {
+  return dayArray(week, field).reduce((a, b) => a + (b || 0), 0);
 }
 
 /**

@@ -7,6 +7,7 @@ import { useWeek } from '../context/WeekContext.jsx';
 import { paths, subscribe } from '../firebase/storage.js';
 import AbsenceGrid, { TYPE_COLORS } from '../components/AbsenceGrid.jsx';
 import AbsenceRangeTool from '../components/AbsenceRangeTool.jsx';
+import AbsenceSummary from '../components/AbsenceSummary.jsx';
 
 export default function AbsencePage() {
   const { year, weekNum } = useWeek();
@@ -29,6 +30,7 @@ export default function AbsencePage() {
     <>
       <h1>Frånvaro</h1>
 
+      <AbsenceSummary users={users} absence={absence} />
       <Legend />
       <AbsenceRangeTool users={users} />
 

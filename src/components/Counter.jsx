@@ -1,16 +1,18 @@
-// Counter — a single counter field with +/- buttons. All writes go through a
-// transaction (storage.adjust) so two simultaneous clicks never lose an
-// increment. Coordinators may also type an exact value.
+// Counter — a single per-day counter cell with +/- buttons. Case counts are
+// tracked per weekday, so each cell targets one (field, dayIndex). All writes
+// go through a transaction (storage.adjust) so simultaneous clicks never lose
+// an increment. Coordinators may also type an exact value.
 
 import { useState } from 'react';
-import { paths, adjust, set } from '../firebase/storage.js';
-import { makeEmptyWeek } from '../utils/dataUtils.js';
+import { paths, adjust } from '../firebase/storage.js';
+import { makeEmptyWeek, dayArray } from '../utils/dataUtils.js';
 
 export default function Counter({
   teamId,
   year,
   weekNum,
   field, // "Beredningar" | "Beslut"
+  dayIndex, // 0 = Måndag … 4 = Fredag
   value,
   canEdit,
   allowExact = false,
@@ -18,25 +20,26 @@ export default function Counter({
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
 
-  async function bump(delta) {
-    await adjust(paths.teamWeek(teamId, year, weekNum), (current) => {
+  function writeDay(nextValue) {
+    return adjust(paths.teamWeek(teamId, year, weekNum), (current) => {
       const data = current ?? makeEmptyWeek();
-      const next = Math.max(0, (data[field] ?? 0) + delta);
-      return { ...data, [field]: next };
+      const arr = [...dayArray(data, field)];
+      arr[dayIndex] = Math.max(0, nextValue);
+      return { ...data, [field]: arr };
     });
   }
 
+  async function bump(delta) {
+    await writeDay(value + delta);
+  }
+
   async function saveExact() {
-    const n = Math.max(0, parseInt(draft, 10) || 0);
-    await adjust(paths.teamWeek(teamId, year, weekNum), (current) => ({
-      ...(current ?? makeEmptyWeek()),
-      [field]: n,
-    }));
+    await writeDay(parseInt(draft, 10) || 0);
     setEditing(false);
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
       <button className="tp-btn" disabled={!canEdit} onClick={() => bump(-1)} aria-label={`Minska ${field}`}>
         −
       </button>
@@ -50,11 +53,11 @@ export default function Counter({
           onChange={(e) => setDraft(e.target.value)}
           onBlur={saveExact}
           onKeyDown={(e) => e.key === 'Enter' && saveExact()}
-          style={{ width: 70, padding: '0.35rem', textAlign: 'center' }}
+          style={{ width: 56, padding: '0.3rem', textAlign: 'center' }}
         />
       ) : (
         <strong
-          style={{ minWidth: 40, textAlign: 'center', cursor: allowExact ? 'pointer' : 'default' }}
+          style={{ minWidth: 32, textAlign: 'center', cursor: allowExact ? 'pointer' : 'default' }}
           onClick={() => {
             if (allowExact) {
               setDraft(String(value));

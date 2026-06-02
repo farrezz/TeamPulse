@@ -39,11 +39,21 @@ service cloud.firestore {
         return hasProfile() && userData().teamId == teamId;
       }
 
-      // A valid team week-counter payload: non-negative integer counts only.
+      // A per-day count array: length 5 (Mån–Fre), non-negative integers.
+      function validDayArray(a) {
+        return a is list && a.size() == 5
+          && a[0] is int && a[0] >= 0
+          && a[1] is int && a[1] >= 0
+          && a[2] is int && a[2] >= 0
+          && a[3] is int && a[3] >= 0
+          && a[4] is int && a[4] >= 0;
+      }
+
+      // A valid team week-counter payload: per-day arrays for both categories.
       function validCounter(data) {
         return data.keys().hasOnly(['Beredningar', 'Beslut'])
-          && data.Beredningar is int && data.Beredningar >= 0
-          && data.Beslut is int && data.Beslut >= 0;
+          && validDayArray(data.Beredningar)
+          && validDayArray(data.Beslut);
       }
 
       // The department doc itself: read for members, write coordinator-only.

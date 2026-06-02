@@ -9,22 +9,11 @@ html,
 body {
   margin: 0;
   padding: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
   background-color: var(--tp-bg, #f4f6f9);
   color: var(--tp-text, #1b2733);
-}
-
-/* Optional global background image overlay (coordinator-set). */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background-image: var(--tp-bg-image, none);
-  background-size: cover;
-  background-position: center;
-  opacity: var(--tp-bg-opacity, 1);
-  pointer-events: none;
+  transition: background-color 160ms ease, color 160ms ease;
 }
 
 a {
@@ -67,8 +56,288 @@ button {
   padding: 1rem;
 }
 
+/* ── Minimal top navbar (Stockholm Design Lab inspired) ─────────────────────── */
+.tp-navbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.75rem;
+  background: var(--tp-bg);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tp-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+
+.tp-brand-mark {
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+}
+
+.tp-brand-sub {
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  color: var(--tp-textMuted);
+}
+
+.tp-demo-tag {
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tp-textMuted);
+}
+
+.tp-nav-links {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.tp-nav-link {
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: var(--tp-textMuted);
+  padding-bottom: 2px;
+  border-bottom: 1px solid transparent;
+  transition: color 120ms;
+}
+
+.tp-nav-link:hover {
+  color: var(--tp-text);
+}
+
+.tp-nav-link.active {
+  color: var(--tp-text);
+  border-bottom-color: var(--tp-text);
+}
+
+.tp-navbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.tp-navbar-user {
+  font-size: 0.85rem;
+  color: var(--tp-textMuted);
+}
+
+.tp-icon-btn {
+  background: transparent;
+  border: none;
+  color: var(--tp-text);
+  font-size: 1.05rem;
+  line-height: 1;
+  padding: 0.2rem;
+}
+
+.tp-icon-btn:hover {
+  opacity: 0.6;
+}
+
+.tp-text-link {
+  background: transparent;
+  border: none;
+  color: var(--tp-textMuted);
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  padding: 0;
+}
+
+.tp-text-link:hover {
+  color: var(--tp-text);
+}
+
+/* App layout: top nav (separate) + sidebar | main. */
+.tp-layout {
+  display: flex;
+  align-items: stretch;
+}
+
+.tp-sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  background: var(--tp-bg);
+  padding: 0.75rem 1rem;
+  min-height: calc(100vh - 60px);
+}
+
+.tp-sidebar-heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--tp-textMuted);
+}
+
+.tp-side-row {
+  display: flex;
+  align-items: center;
+}
+
+.tp-side-row .tp-side-link {
+  flex: 1;
+}
+
+.tp-side-remove {
+  background: transparent;
+  border: none;
+  color: var(--tp-textMuted);
+  font-size: 0.75rem;
+  padding: 0.25rem 0.4rem;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.tp-side-row:hover .tp-side-remove {
+  opacity: 1;
+}
+
+.tp-side-remove:hover {
+  color: var(--tp-danger);
+}
+
+.tp-side-link {
+  display: block;
+  padding: 0.5rem 0.7rem;
+  margin-bottom: 0.25rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--tp-text);
+}
+
+.tp-side-link:hover {
+  background: var(--tp-bg);
+}
+
+.tp-side-link.active {
+  background: var(--tp-primary);
+  color: var(--tp-primaryText);
+}
+
+.tp-main {
+  flex: 1;
+  padding: 1.5rem;
+  min-width: 0; /* let content shrink instead of overflowing the flex row */
+}
+
+/* Centered, width-capped content column inside the main area, so pages sit in
+   the middle of the available space rather than hugging the sidebar. */
+.tp-content {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+/* On narrow screens the sidebar stacks above the content. */
+@media (max-width: 640px) {
+  .tp-layout {
+    flex-direction: column;
+  }
+  .tp-sidebar {
+    width: 100%;
+    min-height: 0;
+  }
+}
+
 .tp-grid-2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1rem;
+}
+
+/* Schema: groups laid out 2 across (so 6 groups = three rows), collapsing to
+   a single column on small screens. */
+.tp-schema-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 560px) {
+  .tp-schema-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Frånvaro week overview: five day cells (present count + absent count). */
+.tp-summary-days {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.5rem;
+}
+
+.tp-summary-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0.5rem;
+  border: 1px solid var(--tp-border);
+  border-radius: 8px;
+}
+
+@media (max-width: 560px) {
+  .tp-summary-days {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Editable member row inside a (narrow) group card — stacked so it never
+   overflows the card. */
+.tp-member {
+  border: 1px solid var(--tp-border);
+  border-radius: 6px;
+  padding: 0.4rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.tp-member-top {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tp-member-name {
+  flex: 1;
+  min-width: 0;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.85rem;
+}
+
+.tp-member-controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem;
+}
+
+.tp-member-controls select {
+  min-width: 0;
+  width: 100%;
+  padding: 0.2rem;
+  font-size: 0.78rem;
+}
+
+.tp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tp-field-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+  color: var(--tp-textMuted);
 }

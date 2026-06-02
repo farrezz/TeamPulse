@@ -8,7 +8,7 @@
 
 import { useEffect, useState } from 'react';
 import { paths, subscribe } from '../firebase/storage.js';
-import { makeEmptyWeek } from '../utils/dataUtils.js';
+import { makeEmptyWeek, weekTotal } from '../utils/dataUtils.js';
 
 export function useTeamWeeks(year, weekNum) {
   const [teams, setTeams] = useState([]);
@@ -40,8 +40,8 @@ export function useTeamWeeks(year, weekNum) {
   const totals = teams.reduce(
     (acc, t) => {
       const w = weekByTeam[t.id] ?? makeEmptyWeek();
-      acc.Beredningar += w.Beredningar ?? 0;
-      acc.Beslut += w.Beslut ?? 0;
+      acc.Beredningar += weekTotal(w, 'Beredningar');
+      acc.Beslut += weekTotal(w, 'Beslut');
       return acc;
     },
     { Beredningar: 0, Beslut: 0 },

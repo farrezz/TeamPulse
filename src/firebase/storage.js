@@ -182,6 +182,16 @@ export async function setAbsenceCell(year, weekNum, uid, dayIndex, value) {
 /** Server timestamp sentinel for createdAt fields. */
 export const timestamp = serverTimestamp;
 
+/**
+ * A fresh document id usable as a key for teams/groups (and demo users).
+ * Works in both modes; Firestore ids are likewise opaque random strings.
+ * Note: real Firebase users must be keyed by their Auth uid — see UserManager
+ * plumbing note. In demo mode any id is fine.
+ */
+export function newId() {
+  return 'id-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+}
+
 /** Upload a background image to Storage; returns its download URL. */
 export async function uploadImage(file) {
   if (IS_DEMO) return URL.createObjectURL(file); // local preview, no upload
