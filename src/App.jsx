@@ -1,0 +1,56 @@
+// App — router, auth gate, and the shared week-state provider.
+
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext.jsx';
+import { WeekProvider } from './context/WeekContext.jsx';
+import NavBar from './components/NavBar.jsx';
+import LoginPage from './pages/LoginPage.jsx';
+import DashboardPage from './pages/DashboardPage.jsx';
+import TeamTrackerPage from './pages/TeamTrackerPage.jsx';
+import SchedulePage from './pages/SchedulePage.jsx';
+import AbsencePage from './pages/AbsencePage.jsx';
+import AdminPage from './pages/AdminPage.jsx';
+
+function RequireCoordinator({ children }) {
+  const { isCoordinator } = useAuth();
+  return isCoordinator ? children : <Navigate to="/" replace />;
+}
+
+export default function App() {
+  const { authUser, profile, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
+        <p className="tp-muted">Laddar…</p>
+      </div>
+    );
+  }
+
+  // Signed out, or signed in without a profile doc yet (not yet provisioned).
+  if (!authUser || !profile) return <LoginPage />;
+
+  return (
+    <WeekProvider>
+      <NavBar />
+      <main className="tp-shell">
+        <Routes>
+          <Route path="/" element={<DashboardPage />} />
+          <Route path="/teams" element={<TeamTrackerPage />} />
+          <Route path="/teams/:teamId" element={<TeamTrackerPage />} />
+          <Route path="/schema" element={<SchedulePage />} />
+          <Route path="/franvaro" element={<AbsencePage />} />
+          <Route
+            path="/admin"
+            element={
+              <RequireCoordinator>
+                <AdminPage />
+              </RequireCoordinator>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </main>
+    </WeekProvider>
+  );
+}

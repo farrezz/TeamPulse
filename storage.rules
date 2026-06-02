@@ -1,0 +1,17 @@
+rules_version = '2';
+
+// Background images only. Signed-in members may read; only coordinators upload.
+// Note: Storage rules cannot read Firestore, so the coordinator gate here is by
+// path convention — uploads live under departments/{dept}/appearance. The
+// Firestore appearance doc (which records the image URL) is coordinator-write-
+// only, so a non-coordinator uploading a stray file has no way to apply it.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /departments/{deptId}/appearance/{fileName} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+  }
+}

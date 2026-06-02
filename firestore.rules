@@ -1,0 +1,100 @@
+rules_version = '2';
+
+// Security posture (PRD §9):
+//  - Read: any signed-in member may read everything (the shared overview).
+//  - Write: a member may write (a) their own team's weekly counter and
+//    (b) any absence (absence is intentionally open to all members).
+//    Everything else is coordinator-only.
+//  - `role` on the user doc is the trust anchor. users/* is coordinator-write-
+//    only, so a member can never promote themselves — isCoordinator can't be
+//    forged. The first coordinator is seeded by hand in the console.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /departments/{deptId} {
+
+      // ── Helpers ────────────────────────────────────────────────────────────
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function userPath() {
+        return /databases/$(database)/documents/departments/$(deptId)/users/$(request.auth.uid);
+      }
+
+      function userData() {
+        return get(userPath()).data;
+      }
+
+      function hasProfile() {
+        return isSignedIn() && exists(userPath());
+      }
+
+      function isCoordinator() {
+        return hasProfile() && userData().role == 'coordinator';
+      }
+
+      function ownsTeam(teamId) {
+        return hasProfile() && userData().teamId == teamId;
+      }
+
+      // A valid team week-counter payload: non-negative integer counts only.
+      function validCounter(data) {
+        return data.keys().hasOnly(['Beredningar', 'Beslut'])
+          && data.Beredningar is int && data.Beredningar >= 0
+          && data.Beslut is int && data.Beslut >= 0;
+      }
+
+      // The department doc itself: read for members, write coordinator-only.
+      allow read: if isSignedIn();
+      allow write: if isCoordinator();
+
+      // ── Users ───────────────────────────────────────────────────────────────
+      // Read: any signed-in member. Write: coordinator-only (the trust anchor).
+      match /users/{uid} {
+        allow read: if isSignedIn();
+        allow write: if isCoordinator();
+      }
+
+      // ── Teams + their weekly counters ────────────────────────────────────────
+      match /teams/{teamId} {
+        allow read: if isSignedIn();
+        allow write: if isCoordinator(); // create/edit/remove a team
+
+        match /weeks/{weekId} {
+          allow read: if isSignedIn();
+          // A member may write their own team's counter; a coordinator any team.
+          // Members are constrained to a valid non-negative counter shape.
+          allow write: if isCoordinator()
+            || (ownsTeam(teamId) && validCounter(request.resource.data));
+        }
+      }
+
+      // ── Department weekly goal ───────────────────────────────────────────────
+      match /goals/{weekId} {
+        allow read: if isSignedIn();
+        allow write: if isCoordinator();
+      }
+
+      // ── Groups ───────────────────────────────────────────────────────────────
+      match /groups/{groupId} {
+        allow read: if isSignedIn();
+        allow write: if isCoordinator();
+      }
+
+      // ── Config (rotation, appearance) ────────────────────────────────────────
+      match /config/{docId} {
+        allow read: if isSignedIn();
+        allow write: if isCoordinator();
+      }
+
+      // ── Absence ──────────────────────────────────────────────────────────────
+      // Fully open: any signed-in member may read and write anyone's absence.
+      match /absence/{weekId} {
+        allow read: if isSignedIn();
+        allow write: if isSignedIn();
+      }
+    }
+  }
+}
