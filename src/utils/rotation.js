@@ -37,7 +37,9 @@ export function getAssignmentsForWeek(year, weekNum, rotation) {
 
   const result = {};
   for (const pairKey in rotation.assignments) {
-    result[pairKey] = (rotation.assignments[pairKey] + shift) % 3;
+    // Rotate the cycle "downward" each week (subtract the shift). The extra
+    // + 3 keeps the result non-negative before the final mod.
+    result[pairKey] = ((rotation.assignments[pairKey] - shift) % 3 + 3) % 3;
   }
   return result;
 }

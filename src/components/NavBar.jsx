@@ -26,7 +26,7 @@ export default function NavBar() {
   return (
     <header className="tp-navbar">
       <div className="tp-brand">
-        <span className="tp-brand-mark">NPB</span>
+        <span className="tp-brand-mark">NBP</span>
         <span className="tp-brand-sub">Malmö Karlskrona Nystartsjobb</span>
       </div>
 

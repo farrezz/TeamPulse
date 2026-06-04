@@ -70,13 +70,13 @@ describe('rotation shift with negative-modulo guard', () => {
     expect(getAssignmentsForWeek(2026, 23, rotation)).toEqual({ pA: 0, pB: 1, pC: 2 });
   });
 
-  it('+1 week shifts all pairs forward by one slot', () => {
-    expect(getAssignmentsForWeek(2026, 24, rotation)).toEqual({ pA: 1, pB: 2, pC: 0 });
+  it('+1 week shifts all pairs one slot downward', () => {
+    expect(getAssignmentsForWeek(2026, 24, rotation)).toEqual({ pA: 2, pB: 0, pC: 1 });
   });
 
   it('past week (before base) resolves correctly, not a negative slot', () => {
-    // 1 week before base: shift should be 2 (i.e. -1 mod 3), never -1.
-    expect(getAssignmentsForWeek(2026, 22, rotation)).toEqual({ pA: 2, pB: 0, pC: 1 });
+    // 1 week before base = one step the other way; never a negative index.
+    expect(getAssignmentsForWeek(2026, 22, rotation)).toEqual({ pA: 1, pB: 2, pC: 0 });
   });
 
   it('override is used verbatim and does not shift the cycle', () => {
