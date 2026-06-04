@@ -58,7 +58,7 @@ export default function NavBar() {
         >
           {mode === 'dark' ? '☀' : '☾'}
         </button>
-        {profile?.name && <span className="tp-navbar-user">{profile.name}</span>}
+        <span className="tp-navbar-user">{profile?.name ?? 'Medlem'}</span>
         <button onClick={signOut} className="tp-text-link">
           Logga ut
         </button>

@@ -70,11 +70,11 @@ service cloud.firestore {
 
         match /weeks/{weekId} {
           allow read: if isSignedIn();
-          // Plan A: members share one login, so "own team" can't be derived.
-          // Any signed-in member may write any team's counter (constrained to a
+          // The shared member login has no profile doc, so don't require one:
+          // any signed-in user may write any team's counter (constrained to a
           // valid non-negative counter shape); coordinators are unconstrained.
-          allow write: if isCoordinator()
-            || (hasProfile() && validCounter(request.resource.data));
+          allow write: if isSignedIn()
+            && (isCoordinator() || validCounter(request.resource.data));
         }
       }
 

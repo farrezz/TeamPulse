@@ -22,8 +22,10 @@ export default function App() {
     );
   }
 
-  // Signed out, or signed in without a profile doc yet (not yet provisioned).
-  if (!authUser || !profile) return <LoginPage />;
+  // Signed out → login. A signed-in user with no roster doc is allowed in as a
+  // plain member (the shared member login intentionally has no person-doc, so
+  // it never counts as a member). Coordinators are identified by their doc.
+  if (!authUser) return <LoginPage />;
 
   return (
     <WeekProvider>
