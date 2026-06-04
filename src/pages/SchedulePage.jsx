@@ -7,12 +7,12 @@
 //  - per-card: edit/add/remove/reassign members, set a manual task, set a
 //    per-week rotation override, delete an empty manual group (see GroupCard).
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useWeek } from '../context/WeekContext.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { paths, subscribe, set, adjust, newId } from '../firebase/storage.js';
 import { defaultRotation } from '../utils/dataUtils.js';
-import { taskForGroup } from '../utils/rotation.js';
+import { taskForGroup, getAssignmentsForWeek } from '../utils/rotation.js';
 import { pairKeyForGroup } from '../utils/keys.js';
 import GroupCard from '../components/GroupCard.jsx';
 
@@ -128,6 +128,10 @@ export default function SchedulePage() {
 
       {isCoordinator && hasRotating && <SlotLabelEditor rotation={rotation} />}
 
+      {isCoordinator && hasRotating && (
+        <RotationStartEditor groups={groups} rotation={rotation} year={year} weekNum={weekNum} />
+      )}
+
       {groups.length === 0 ? (
         <p className="tp-muted">Inga grupper än.</p>
       ) : (
@@ -188,6 +192,82 @@ function SlotLabelEditor({ rotation }) {
       </div>
       <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
         <button className="tp-text-link" type="submit" style={{ fontWeight: 700 }}>Spara</button>
+        {saved && <span style={{ color: 'var(--tp-accent)', fontSize: '0.85rem' }}>Sparad!</span>}
+      </div>
+    </form>
+  );
+}
+
+// Coordinator-only: set each pair's task for the active week and anchor the
+// rotation here, so the cycle starts from this exact layout and rotates forward
+// from this week. Clears any per-week overrides so the new base shows cleanly.
+function RotationStartEditor({ groups, rotation, year, weekNum }) {
+  const pairs = useMemo(() => {
+    const rotating = groups
+      .filter((g) => g.rotating)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    const seen = new Set();
+    const out = [];
+    for (const g of rotating) {
+      if (seen.has(g.id)) continue;
+      const partner = groups.find((x) => x.id === g.pairWith);
+      if (!partner) continue;
+      seen.add(g.id);
+      seen.add(partner.id);
+      out.push({ key: pairKeyForGroup(g), label: `${g.name} & ${partner.name}` });
+    }
+    return out;
+  }, [groups]);
+
+  const [choice, setChoice] = useState({});
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    const current = getAssignmentsForWeek(year, weekNum, rotation);
+    const init = {};
+    pairs.forEach((p) => { init[p.key] = current[p.key] ?? 0; });
+    setChoice(init);
+  }, [pairs, year, weekNum, rotation]);
+
+  const slots = rotation.slots ?? [];
+
+  async function commit(e) {
+    e.preventDefault();
+    if (!confirm(`Ankra rotationen till vecka ${weekNum} med dessa uppgifter?`)) return;
+    await set(paths.rotation(), {
+      ...rotation,
+      baseYear: year,
+      baseWeek: weekNum,
+      assignments: { ...choice },
+      overrides: {}, // re-anchoring clears one-week exceptions
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  return (
+    <form className="tp-card" onSubmit={commit} style={{ marginTop: '1rem' }}>
+      <p className="tp-sidebar-heading">Rotationsstart (vecka {weekNum})</p>
+      <p className="tp-muted" style={{ marginTop: 0, fontSize: '0.85rem' }}>
+        Välj uppgift per par och lås rotationen till den här veckan. Rotationen utgår sedan härifrån.
+      </p>
+      <div style={{ display: 'grid', gap: '0.5rem' }}>
+        {pairs.map((p) => (
+          <label key={p.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem' }}>
+            <span>{p.label}</span>
+            <select
+              value={choice[p.key] ?? 0}
+              onChange={(e) => setChoice({ ...choice, [p.key]: Number(e.target.value) })}
+            >
+              {slots.map((label, i) => (
+                <option key={i} value={i}>{label}</option>
+              ))}
+            </select>
+          </label>
+        ))}
+      </div>
+      <div style={{ marginTop: '0.5rem', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <button className="tp-btn" type="submit">Lås rotationen till denna vecka</button>
         {saved && <span style={{ color: 'var(--tp-accent)', fontSize: '0.85rem' }}>Sparad!</span>}
       </div>
     </form>
