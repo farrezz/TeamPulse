@@ -13,7 +13,7 @@ export const TYPE_COLORS = {
   semester: 'var(--tp-danger)',
   ovrig: 'var(--tp-textMuted)',
 };
-const TYPE_LABELS = { semester: 'Semester', ovrig: 'Övrig' };
+const TYPE_LABELS = { semester: 'Semester', ovrig: 'Övrigt' };
 
 export default function AbsenceGrid({ year, weekNum, users, absence }) {
   return (
