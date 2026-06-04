@@ -66,7 +66,7 @@ export default function AbsenceRangeTool({ users }) {
           <br />
           <select value={type} onChange={(e) => setType(e.target.value)}>
             <option value="semester">Semester</option>
-            <option value="ovrig">Övrig</option>
+            <option value="ovrig">Övrigt</option>
           </select>
         </label>
         <label>
